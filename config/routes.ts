@@ -42,6 +42,39 @@
 		component: './TodoList',
 		icon: 'FullscreenExitOutlined',
 	},
+	{
+		path: '/rps',
+		name: 'RockPaperScissors',
+		component: './RockPaperScissors',
+		icon: 'FullscreenExitOutlined',
+	},
+	{
+		name: 'QuestionBank',
+		icon: 'FullscreenExitOutlined',
+		routes: [
+			{
+				name: 'Subjects',
+				path: '/question-bank/subjects',
+				component: './QuestionBank/Subjects',
+			},
+			{
+				name: 'KnowledgeArea',
+				path: '/question-bank/knowledgearea',
+				component: './QuestionBank/KnowledgeArea',
+			},
+			{
+				name: 'Questions',
+				path: '/question-bank/questions',
+				component: './QuestionBank/Questions',
+			},
+			{
+				name: 'Exams',
+				path: '/question-bank/exams',
+				component: './QuestionBank/Exams',
+			},
+		],
+	},
+
 	// DANH MUC HE THONG
 	// {
 	// 	name: 'DanhMuc',
