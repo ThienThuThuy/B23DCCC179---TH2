@@ -10,13 +10,12 @@ const RockPaperScissors: React.FC = () => {
     const { history, playGame } = useModel('useGameModel');
     console.log('choices:', choices);
 
-    // Cấu hình cột cho bảng
     const columns = [
         {
             title: 'Lần chơi',
             dataIndex: 'id',
             key: 'id',
-            render: (text: number, record: any, index: number) => index + 1, // Số thứ tự
+            render: (text: number, record: any, index: number) => index + 1,
         },
         {
             title: 'Bạn chọn',

@@ -1,6 +1,5 @@
 const SUBJECT_STORAGE_KEY = "subjects";
 const QUESTION_STORAGE_KEY = "questions";
-const EXAM_STORAGE_KEY = "exams";
 
 //📌
 
@@ -132,77 +131,4 @@ export const deleteKnowledgeArea = (subjectId: number, knowledgeArea: string) =>
             saveData(SUBJECT_STORAGE_KEY, subjects); // Lưu lại môn học đã được cập nhật
         }
     }
-};
-export const getStoredExams = (): Exam[] => {
-    try {
-        const storedData = JSON.parse(localStorage.getItem(EXAM_STORAGE_KEY) || "[]");
-        if (Array.isArray(storedData) && storedData.length > 0) return storedData;
-    } catch (error) {
-        console.error("Lỗi khi parse exams:", error);
-    }
-    return [];
-};
-
-export const deleteExam = (id: number): Exam[] => {
-    const updatedExams = getStoredExams().filter(exam => exam.id !== id);
-    saveData(EXAM_STORAGE_KEY, updatedExams);
-    return updatedExams;
-};
-export const editExam = (id: number, updatedData: Partial<Exam>): Exam[] => {
-    const updatedExams = getStoredExams().map(exam =>
-        exam.id === id ? { ...exam, ...updatedData } : exam
-    );
-    saveData(EXAM_STORAGE_KEY, updatedExams);
-    return updatedExams;
-};
-
-
-export const addExam = (newExam: Exam): Exam[] => {
-    const exams = getStoredExams();
-    const updatedExams = [...exams, newExam];
-    saveData(EXAM_STORAGE_KEY, updatedExams);
-    return updatedExams;
-};
-
-
-
-export const generateExam = (
-    subjectId: number,
-    structure: ExamStructure[],
-    availableQuestions: Question[]
-): string[] => {
-    // Kiểm tra dữ liệu câu hỏi
-    if (!availableQuestions || !Array.isArray(availableQuestions)) {
-        throw new Error('Không có câu hỏi nào cho môn học này');
-    }
-
-    // Lọc câu hỏi theo môn học
-    const subjectQuestions = availableQuestions.filter((q) => q.subjectId === subjectId);
-    const selectedQuestions: string[] = [];
-
-    // Lặp qua cấu trúc đề thi để chọn câu hỏi
-    for (const req of structure) {
-        // Lọc câu hỏi theo mức độ khó và khối kiến thức
-        const matchingQuestions = subjectQuestions.filter(
-            (q) =>
-                q.difficulty === req.difficulty &&
-                q.knowledgeArea === req.knowledgeArea &&
-                !selectedQuestions.includes(q.id.toString()) // Chuyển `q.id` sang string để so sánh đúng
-        );
-
-        // Kiểm tra nếu không đủ câu hỏi theo yêu cầu
-        if (matchingQuestions.length < req.count) {
-            throw new Error(
-                `Không đủ câu hỏi cho mức độ "${req.difficulty}" và khối kiến thức "${req.knowledgeArea}". ` +
-                `Yêu cầu ${req.count} câu, hiện có ${matchingQuestions.length} câu.`
-            );
-        }
-
-        // Chọn ngẫu nhiên câu hỏi
-        const shuffled = [...matchingQuestions].sort(() => 0.5 - Math.random());
-        const selected = shuffled.slice(0, req.count);
-        selectedQuestions.push(...selected.map((q) => q.id.toString()));  // Chuyển `id` sang string để lưu trữ
-    }
-
-    return selectedQuestions;
 };

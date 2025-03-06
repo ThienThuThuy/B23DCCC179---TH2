@@ -19,30 +19,6 @@
 	///////////////////////////////////
 	// DEFAULT MENU
 	{
-		path: '/dashboard',
-		name: 'Dashboard',
-		component: './TrangChu',
-		icon: 'HomeOutlined',
-	},
-	{
-		path: '/gioi-thieu',
-		name: 'About',
-		component: './TienIch/GioiThieu',
-		hideInMenu: true,
-	},
-	{
-		path: '/random-user',
-		name: 'RandomUser',
-		component: './RandomUser',
-		icon: 'FullscreenExitOutlined',
-	},
-	{
-		path: '/todo-list',
-		name: 'Todolist',
-		component: './TodoList',
-		icon: 'FullscreenExitOutlined',
-	},
-	{
 		path: '/rps',
 		name: 'RockPaperScissors',
 		component: './RockPaperScissors',
@@ -74,7 +50,36 @@
 			},
 		],
 	},
+	{
+		name: 'Bai 2',
+		icon: 'MenuUnfoldOutlined',
+		routes: [
+			{
+				name: 'Danh mục khối kiến thức',
+				path: '/DanhMucKhoiKienThuc',
+				component: './TH2/DanhMucKhoiKienThuc',
 
+
+			},
+			{
+				name: 'Subject',
+				path: '/Subject',
+				component: './TH2/subject',
+
+			},
+			{
+				name: 'Question',
+				path: '/Question',
+				component: './TH2/question',
+			},
+			{
+				name: 'exam',
+				path: '/exam',
+				component: './TH2/ExamQuetion',
+			},
+
+		],
+	},
 	// DANH MUC HE THONG
 	// {
 	// 	name: 'DanhMuc',
