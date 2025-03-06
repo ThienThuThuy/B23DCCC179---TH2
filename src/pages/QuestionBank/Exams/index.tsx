@@ -4,8 +4,8 @@ import {
     getStoredSubjects,
     getStoredQuestions,
     getStoredExams
-
 } from "@/services/QuestionBank";
+
 const { Title } = Typography;
 const { Option } = Select;
 
@@ -14,7 +14,9 @@ const ExamCreationPage: React.FC = () => {
     const [questions, setQuestions] = useState<Question[]>([]);
     const [examStructure, setExamStructure] = useState<ExamStructure | null>(null);
     const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
+    const [selectedKnowledgeAreas, setSelectedKnowledgeAreas] = useState<string[]>([]); // Khối kiến thức theo môn
     const [exams, setExams] = useState<ExamStructure[]>([]);  // Lưu trữ các đề thi đã tạo
+    const [editingExam, setEditingExam] = useState<ExamStructure | null>(null); // Lưu trữ đề thi đang chỉnh sửa
     const [form] = Form.useForm();
 
     useEffect(() => {
@@ -26,12 +28,25 @@ const ExamCreationPage: React.FC = () => {
         setSubjects(storedSubjects); // Cập nhật state subjects
         setQuestions(storedQuestions); // Cập nhật state questions
 
+        // Chuyển đổi từ Exam[] sang ExamStructure[]
+        const formattedExams = storedExams.map((exam) => ({
+            ...exam,
+            structure: {}  // Cung cấp giá trị mặc định cho `structure` nếu cần
+        }));
 
-
+        setExams(formattedExams);  // Cập nhật state exams
     }, []);
 
+    // Lọc khối kiến thức theo môn học đã chọn
+    const handleSubjectChange = (subjectId: number) => {
+        setSelectedSubject(subjectId);
+        const knowledgeAreas = questions
+            .filter((q) => q.subjectId === subjectId)
+            .map((q) => q.knowledgeArea);
+        setSelectedKnowledgeAreas([...new Set(knowledgeAreas)]);  // Loại bỏ các khối kiến thức trùng
+    };
 
-    const handleCreateExam = (values: any) => {
+    const handleCreateOrUpdateExam = (values: any) => {
         if (!selectedSubject) {
             message.error("Vui lòng chọn môn học!");
             return;
@@ -70,7 +85,6 @@ const ExamCreationPage: React.FC = () => {
             return;
         }
 
-        // Lưu cấu trúc đề thi vào localStorage
         const newExamStructure: ExamStructure = {
             subjectId: selectedSubject,
             questions: selectedQuestions,
@@ -78,28 +92,50 @@ const ExamCreationPage: React.FC = () => {
         };
 
         // Cập nhật danh sách đề thi
-        saveData("exams", [...getStoredExams(), newExamStructure]);
-        setExams([...getStoredExams(), newExamStructure]);  // Cập nhật state với đề thi mới
+        const updatedExams = editingExam
+            ? exams.map((exam) =>
+                exam === editingExam ? { ...exam, ...newExamStructure } : exam
+            )
+            : [...exams, newExamStructure];
 
-        message.success("Đề thi đã được tạo thành công!");
+        saveData("exams", updatedExams); // Lưu lại vào localStorage
+        setExams(updatedExams);  // Cập nhật state exams
+
+        message.success(editingExam ? "Đề thi đã được cập nhật!" : "Đề thi đã được tạo thành công!");
+
+        // Reset form và state
         setExamStructure(newExamStructure);  // Cập nhật đề thi đã tạo
+        setEditingExam(null);  // Reset việc chỉnh sửa
+        form.resetFields();  // Đặt lại form
+    };
+
+    const handleEditExam = (exam: ExamStructure) => {
+        setEditingExam(exam);  // Cập nhật exam đang chỉnh sửa
+        setSelectedSubject(exam.subjectId);  // Chọn môn học
+        setSelectedKnowledgeAreas(exam.structure.knowledgeAreas || []); // Chọn khối kiến thức đã có
+        form.setFieldsValue({
+            subject: exam.subjectId,
+            knowledgeAreas: exam.structure.knowledgeAreas || [],
+            difficulties: exam.structure.difficulties || [],
+            questionsCount: exam.structure.questionsCount || { Easy: 0, Medium: 0, Hard: 0 }
+        });
     };
 
     return (
         <div style={{ padding: 20 }}>
             <Title level={2} style={{ textAlign: "center", marginBottom: 24 }}>
-                Tạo Đề Thi
+                {editingExam ? "Chỉnh Sửa Đề Thi" : "Tạo Đề Thi"}
             </Title>
             <Form
                 form={form}
-                onFinish={handleCreateExam}
+                onFinish={handleCreateOrUpdateExam}
                 layout="vertical"
                 initialValues={{ questionsCount: { Easy: 0, Medium: 0, Hard: 0 } }}
             >
                 <Form.Item name="subject" label="Chọn Môn Học" rules={[{ required: true, message: "Vui lòng chọn môn học!" }]}>
                     <Select
                         placeholder="Chọn môn học"
-                        onChange={(value) => setSelectedSubject(value)}
+                        onChange={handleSubjectChange}
                         allowClear
                     >
                         {subjects.map((subject) => (
@@ -112,7 +148,7 @@ const ExamCreationPage: React.FC = () => {
 
                 <Form.Item name="knowledgeAreas" label="Chọn Khối Kiến Thức" rules={[{ required: true, message: "Vui lòng chọn khối kiến thức!" }]}>
                     <Select mode="multiple" placeholder="Chọn khối kiến thức">
-                        {Array.from(new Set(questions.map((q) => q.knowledgeArea))).map((area, index) => (
+                        {selectedKnowledgeAreas.map((area, index) => (
                             <Option key={index} value={area}>
                                 {area}
                             </Option>
@@ -131,18 +167,31 @@ const ExamCreationPage: React.FC = () => {
                 </Form.Item>
 
                 <Form.Item name="questionsCount" label="Số Lượng Câu Hỏi" rules={[{ required: true, message: "Vui lòng nhập số lượng câu hỏi!" }]}>
-                    <div>
+                    <div style={{ display: "flex", flexDirection: "column" }}>
                         {["Easy", "Medium", "Hard"].map((difficulty) => (
-                            <Form.Item key={difficulty} name={["questionsCount", difficulty]}>
-                                <InputNumber min={0} placeholder={`Số câu hỏi ${difficulty}`} />
-                            </Form.Item>
+                            <div key={difficulty} style={{ marginBottom: 10 }}>
+                                <span>{`Số câu hỏi ${difficulty}: `}</span>
+                                <Form.Item
+                                    name={["questionsCount", difficulty]}  // This will map to questionsCount.Easy, questionsCount.Medium, etc.
+                                    initialValue={0}  // Ensure initial value is 0 if not already set
+                                    style={{ display: "inline-block", marginLeft: 8 }}
+                                >
+                                    <InputNumber
+                                        min={0}
+                                        placeholder={`Số câu hỏi ${difficulty}`}
+                                        style={{ width: 100 }}  // Adjust width as needed
+                                    />
+                                </Form.Item>
+                            </div>
                         ))}
                     </div>
                 </Form.Item>
 
+
+
                 <Form.Item>
                     <Button type="primary" htmlType="submit">
-                        Tạo Đề Thi
+                        {editingExam ? "Cập Nhật Đề Thi" : "Tạo Đề Thi"}
                     </Button>
                 </Form.Item>
             </Form>
@@ -201,7 +250,12 @@ const ExamCreationPage: React.FC = () => {
                             title: "Thao Tác",
                             key: "action",
                             render: (_, record: ExamStructure) => (
-                                <Button onClick={() => console.log("Xóa đề thi", record)}>Xóa</Button>
+                                <>
+                                    <Button onClick={() => handleEditExam(record)}>Sửa</Button>
+                                    <Button onClick={() => console.log("Xóa đề thi", record)} style={{ marginLeft: 8 }}>
+                                        Xóa
+                                    </Button>
+                                </>
                             ),
                         },
                     ]}

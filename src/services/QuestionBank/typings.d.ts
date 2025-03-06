@@ -1,37 +1,48 @@
+// Interface cho Môn học
 interface Subject {
     id: number;
     name: string;
-    credit: number;
-    knowledgeAreas: string[];
-    color: string;
+    credit: number;  // Số tín chỉ của môn học
+    knowledgeAreas: string[];  // Các khối kiến thức của môn học (có thể là tên hoặc ID của khối kiến thức)
+    color: string;  // Màu sắc đại diện cho môn học
 }
 
+// Interface cho Khối Kiến Thức
 interface KnowledgeArea {
     id: number;
     name: string;
-    subjectId: number; // Kiểu number để đồng nhất với Subject
+    subjectId: number;  // Môn học mà khối kiến thức này thuộc về
 }
 
+// Interface cho Câu hỏi
 interface Question {
     id: number;
-    subjectId: number; // Kiểu number để đồng nhất với Subject
-    content: string;
-    difficulty: string;
-    knowledgeArea: string;
+    content: string;  // Nội dung câu hỏi
+    difficulty: "Easy" | "Medium" | "Hard";  // Mức độ khó của câu hỏi
+    knowledgeArea: string;  // Tên hoặc ID khối kiến thức mà câu hỏi này thuộc về
+    subjectId: number;  // Môn học mà câu hỏi này thuộc về
 }
+
+// Interface cho Cấu trúc Đề thi
 interface ExamStructure {
-    id: number; // Mỗi cấu trúc đề thi có id riêng
-    difficulty: string;
-    knowledgeArea: string; // Đổi từ knowledgeBlock thành knowledgeArea để thống nhất
-    count: number;
+    subjectId: number;  // Môn học của đề thi
+    questions: Question[];  // Các câu hỏi trong đề thi
+    structure: {
+        knowledgeAreas: string[];  // Các khối kiến thức yêu cầu trong đề thi (có thể là tên hoặc ID)
+        difficulties: string[];  // Các mức độ khó của câu hỏi
+        questionsCount: {
+            Easy: number;
+            Medium: number;
+            Hard: number;
+        };  // Số lượng câu hỏi theo mức độ khó
+    };
 }
 
-interface Exam {
-    id: number; // Mỗi đề thi có id riêng
-    name: string;
-    subjectId: number; // Môn học của đề thi
-    questions: number[]; // Dùng number thay vì string, vì question id là number
-    structure: ExamStructure[]; // Cấu trúc của đề thi, bao gồm các yêu cầu về mức độ khó, khối kiến thức và số câu hỏi
-    createdAt: string; // Thời gian tạo đề thi
-}
-
+// Hàm hỗ trợ lọc câu hỏi theo các điều kiện
+const filterQuestions = (questions: Question[], filters: { subjectId: number, knowledgeAreas: string[], difficulties: string[] }): Question[] => {
+    return questions.filter((question) =>
+        question.subjectId === filters.subjectId &&
+        filters.knowledgeAreas.includes(question.knowledgeArea) &&
+        filters.difficulties.includes(question.difficulty)
+    );
+};

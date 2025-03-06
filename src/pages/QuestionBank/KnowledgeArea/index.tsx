@@ -51,17 +51,21 @@ const KnowledgeAreasPage: React.FC = () => {
         form
             .validateFields()
             .then(values => {
-                if (isEditing && editingKnowledgeArea) {
-                    // Chỉnh sửa khối kiến thức
-                    editKnowledgeArea(currentSubjectId!, editingKnowledgeArea, values.knowledgeArea);
-                    message.success("Chỉnh sửa khối kiến thức thành công!");
+                if (currentSubjectId) {
+                    if (isEditing && editingKnowledgeArea) {
+                        // Chỉnh sửa khối kiến thức
+                        editKnowledgeArea(currentSubjectId, editingKnowledgeArea, values.knowledgeArea);
+                        message.success("Chỉnh sửa khối kiến thức thành công!");
+                    } else {
+                        // Thêm khối kiến thức
+                        addKnowledgeAreaToSubject(currentSubjectId, values.knowledgeArea);
+                        message.success("Thêm khối kiến thức thành công!");
+                    }
+                    setIsModalOpen(false);
+                    form.resetFields();
                 } else {
-                    // Thêm khối kiến thức
-                    addKnowledgeAreaToSubject(currentSubjectId!, values.knowledgeArea);
-                    message.success("Thêm khối kiến thức thành công!");
+                    message.error("Vui lòng chọn môn học trước!");
                 }
-                setIsModalOpen(false);
-                form.resetFields();
             })
             .catch(info => {
                 console.log("Validate Failed:", info);
@@ -76,8 +80,12 @@ const KnowledgeAreasPage: React.FC = () => {
 
     // Xử lý xóa khối kiến thức
     const handleDelete = (knowledgeArea: string) => {
-        deleteKnowledgeArea(currentSubjectId!, knowledgeArea);
-        message.success("Khối kiến thức đã bị xóa!");
+        if (currentSubjectId) {
+            deleteKnowledgeArea(currentSubjectId, knowledgeArea);
+            message.success("Khối kiến thức đã bị xóa!");
+        } else {
+            message.error("Vui lòng chọn môn học trước khi xóa khối kiến thức!");
+        }
     };
 
     return (
